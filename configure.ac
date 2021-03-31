@@ -9,5 +9,5 @@ PKG_CHECK_MODULES([GTK], [gtk+-3.0])
 AC_SUBST([GTK_CFLAGS])
 AC_SUBST([GTK_LIBS])
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/simpledevelop.desktop])
 AC_OUTPUT

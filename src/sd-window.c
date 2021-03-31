@@ -1,4 +1,4 @@
-/* sd-application-window.h -- This file is part of SimpleDevelop.
+/* sd-window.c -- This file is part of SimpleDevelop.
    Copyright (C) 2021 XNSC
 
    SimpleDevelop is free software: you can redistribute it and/or modify
@@ -14,25 +14,30 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef _SD_APPLICATION_WINDOW_H
-#define _SD_APPLICATION_WINDOW_H
+#include "sd-window.h"
 
-#include "sd-application.h"
+G_DEFINE_TYPE (SDWindow, sd_window, GTK_TYPE_WINDOW)
 
-G_BEGIN_DECLS
-
-#define SD_TYPE_APPLICATION_WINDOW sd_application_window_get_type ()
-G_DECLARE_FINAL_TYPE (SDApplicationWindow, sd_application_window, SD,
-		      APPLICATION_WINDOW, GtkApplicationWindow)
-
-struct _SDApplicationWindow
+static void
+sd_window_init (SDWindow *self)
 {
-  GtkApplicationWindow parent;
-};
+  gtk_widget_init_template (GTK_WIDGET (self));
+}
 
-SDApplicationWindow *sd_application_window_new (SDApplication *app);
-void sd_application_window_open (SDApplicationWindow *window, GFile *file);
+static void
+sd_window_class_init (SDWindowClass *klass)
+{
+  gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (klass),
+					       SD_RESOURCE_WINDOW_UI);
+}
 
-G_END_DECLS
+SDWindow *
+sd_window_new (SDApplication *app)
+{
+  return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
+}
 
-#endif
+void
+sd_window_open (SDWindow *window, GFile *file)
+{
+}

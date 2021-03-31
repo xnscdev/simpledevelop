@@ -14,7 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#include "sd-application-window.h"
+#include "sd-window.h"
 
 G_DEFINE_TYPE (SDApplication, sd_application, GTK_TYPE_APPLICATION)
 
@@ -43,9 +43,9 @@ sd_application_open (GApplication *app, GFile **files, gint nfiles,
   g_list_foreach (windows, sd_application_open_window, NULL);
   for (i = 0; i < nfiles; i++)
     {
-      SDApplicationWindow *window =
-	sd_application_window_new (SD_APPLICATION (app));
-      sd_application_window_open (window, files[i]);
+      SDWindow *window =
+	sd_window_new (SD_APPLICATION (app));
+      sd_window_open (window, files[i]);
       gtk_window_present (GTK_WINDOW (window));
     }
 }

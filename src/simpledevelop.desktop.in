@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SimpleDevelop
+Icon=simpledevelop
+StartupNotify=true
+Exec=@bindir@/simpledevelop
