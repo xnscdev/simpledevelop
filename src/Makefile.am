@@ -17,17 +17,17 @@ simpledevelop_SOURCES = 	\
 simpledevelop_LDADD = $(GTK_LIBS)
 
 resources = org.xnsc.simpledevelop.gresource.xml
-resources.c: $(resources)
+resources.c: $(resources) window.glade
 	$(AM_V_GEN) glib-compile-resources --sourcedir=$(srcdir) --target=$@ \
 	    --generate-source --c-name=simpledevelop $(srcdir)/$(resources)
-resources.h: $(resources)
+resources.h: $(resources) window.glade
 	$(AM_V_GEN) glib-compile-resources --sourcedir=$(srcdir) --target=$@ \
 	    --generate-header --c-name=simpledevelop $(srcdir)/$(resources)
 
 appdir = $(datadir)/applications
 app_DATA = simpledevelop.desktop
 
-CLEANFILES = *~
+CLEANFILES = *~ resources.c resources.h
 
 EXTRA_DIST =		\
 	window.glade	\
