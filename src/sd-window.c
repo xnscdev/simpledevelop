@@ -16,6 +16,12 @@
 
 #include "sd-window.h"
 
+enum
+{
+  NAME_COLUMN = 0,
+  N_COLUMNS
+};
+
 struct _SDWindowPrivate
 {
   GtkWidget *project_tree;
@@ -49,11 +55,12 @@ sd_window_new (SDApplication *app)
   return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
 }
 
-void
-sd_window_open (SDWindow *window, GFile *file)
+static void
+sd_window_populate_project_tree (GtkTreeStore *store, GtkTreeIter *parent,
+				 GFile *file)
 {
-  SDWindowPrivate *priv = sd_window_get_instance_private (window);
   GError *err = NULL;
+  GtkTreeIter child;
   GFileEnumerator *en =
     g_file_enumerate_children (file, G_FILE_ATTRIBUTE_STANDARD_NAME ","
 			       G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
@@ -73,15 +80,23 @@ sd_window_open (SDWindow *window, GFile *file)
   while (TRUE)
     {
       GFileInfo *info;
+      GFile *subdir;
+      const gchar *dispname;
       if (!g_file_enumerator_iterate (en, &info, NULL, NULL, &err))
 	goto finish;
       if (info == NULL)
 	break;
 
+      dispname = g_file_info_get_display_name (info);
+      g_message ("%s", dispname);
+      gtk_tree_store_append (store, &child, parent);
+      gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, -1);
+
       if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY)
-	; /* TODO Recursive enumeration */
-      else
-	g_message ("%s", g_file_info_get_display_name (info));
+        {
+	  subdir = g_file_get_child (file, g_file_info_get_name (info));
+	  sd_window_populate_project_tree (store, &child, subdir);
+	}
     }
 
  finish:
@@ -93,4 +108,39 @@ sd_window_open (SDWindow *window, GFile *file)
       g_error_free (err);
     }
   g_object_unref (en);
+}
+
+void
+sd_window_open (SDWindow *window, GFile *file)
+{
+  SDWindowPrivate *priv = sd_window_get_instance_private (window);
+  GtkTreeView *view = GTK_TREE_VIEW (priv->project_tree);
+  GtkTreeStore *store = GTK_TREE_STORE (gtk_tree_view_get_model (view));
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *col;
+  GtkTreeIter parent;
+  GError *err = NULL;
+  GFileInfo *info =
+    g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
+		       G_FILE_QUERY_INFO_NONE, NULL, &err);
+  if (err != NULL)
+    {
+      gchar *path = g_file_get_path (file);
+      g_critical ("Failed to get info for %s: %s", path, err->message);
+      g_free (path);
+      g_error_free (err);
+      return;
+    }
+
+  renderer = gtk_cell_renderer_text_new ();
+  col = gtk_tree_view_column_new_with_attributes ("Project Tree", renderer,
+						  "text", NAME_COLUMN, NULL);
+  gtk_tree_view_append_column (view, col);
+
+  gtk_tree_store_append (store, &parent, NULL);
+  gtk_tree_store_set (store, &parent, NAME_COLUMN,
+		      g_file_info_get_display_name (info), -1);
+  g_object_unref (info);
+  gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &parent);
+  sd_window_populate_project_tree (store, &parent, file);
 }
