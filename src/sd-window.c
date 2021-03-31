@@ -117,6 +117,7 @@ sd_window_open (SDWindow *window, GFile *file)
   GtkTreeStore *store = GTK_TREE_STORE (gtk_tree_view_get_model (view));
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *col;
+  GtkTreePath *path;
   GtkTreeIter parent;
   GError *err = NULL;
   GFileInfo *info =
@@ -142,4 +143,8 @@ sd_window_open (SDWindow *window, GFile *file)
   g_object_unref (info);
   gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &parent);
   sd_window_populate_project_tree (store, &parent, file);
+
+  path = gtk_tree_path_new_first ();
+  gtk_tree_view_expand_row (view, path, FALSE);
+  gtk_tree_path_free (path);
 }
