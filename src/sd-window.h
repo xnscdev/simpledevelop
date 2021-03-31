@@ -21,6 +21,13 @@
 
 #define SD_RESOURCE_WINDOW_UI "/org/xnsc/simpledevelop/window.glade"
 
+enum
+{
+  NAME_COLUMN = 0,
+  FG_COLUMN,
+  N_COLUMNS
+};
+
 G_BEGIN_DECLS
 
 #define SD_TYPE_WINDOW sd_window_get_type ()

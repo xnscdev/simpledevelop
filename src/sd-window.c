@@ -17,13 +17,6 @@
 #include "callbacks.h"
 #include "sd-window.h"
 
-enum
-{
-  NAME_COLUMN = 0,
-  FG_COLUMN,
-  N_COLUMNS
-};
-
 struct _SDWindowPrivate
 {
   GtkWidget *project_tree;

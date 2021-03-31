@@ -15,10 +15,28 @@
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
 #include "callbacks.h"
+#include "sd-window.h"
 
 void
 sd_project_tree_expand (GtkTreeView *view, GtkTreeIter *iter, GtkTreePath *path,
 			gpointer user_data)
 {
+  GtkTreeModel *model = gtk_tree_view_get_model (view);
+  GtkTreeIter child;
+  gchar *name;
+  gchar *color;
+  gboolean unloaded;
+
+  if (gtk_tree_model_iter_n_children (model, iter) != 1)
+    return;
+  g_return_if_fail (gtk_tree_model_iter_children (model, &child, iter));
+
+  gtk_tree_model_get (model, &child, NAME_COLUMN, &name, FG_COLUMN, &color, -1);
+  unloaded = g_strcmp0 (name, "Loading...") == 0
+    && g_strcmp0 (color, "LightSlateGray") == 0;
+  g_free (name);
+  g_free (color);
+  if (!unloaded)
+    return;
   g_message ("Expanded a tree!");
 }
