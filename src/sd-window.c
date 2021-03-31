@@ -88,7 +88,6 @@ sd_window_populate_project_tree (GtkTreeStore *store, GtkTreeIter *parent,
 	break;
 
       dispname = g_file_info_get_display_name (info);
-      g_message ("%s", dispname);
       gtk_tree_store_append (store, &child, parent);
       gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, -1);
 
