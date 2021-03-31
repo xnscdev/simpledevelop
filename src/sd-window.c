@@ -14,11 +14,13 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
+#include "callbacks.h"
 #include "sd-window.h"
 
 enum
 {
   NAME_COLUMN = 0,
+  FG_COLUMN,
   N_COLUMNS
 };
 
@@ -49,15 +51,9 @@ sd_window_class_init (SDWindowClass *klass)
 						SDWindow, editor_view);
 }
 
-SDWindow *
-sd_window_new (SDApplication *app)
-{
-  return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
-}
-
 static void
 sd_window_populate_project_tree (GtkTreeStore *store, GtkTreeIter *parent,
-				 GFile *file)
+				 GFile *file, guint level)
 {
   GError *err = NULL;
   GtkTreeIter child;
@@ -89,12 +85,24 @@ sd_window_populate_project_tree (GtkTreeStore *store, GtkTreeIter *parent,
 
       dispname = g_file_info_get_display_name (info);
       gtk_tree_store_append (store, &child, parent);
-      gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, -1);
+      gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, FG_COLUMN,
+			  "Black", -1);
 
       if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY)
         {
-	  subdir = g_file_get_child (file, g_file_info_get_name (info));
-	  sd_window_populate_project_tree (store, &child, subdir);
+	  if (level > 2)
+	    {
+	      GtkTreeIter subchild;
+	      gtk_tree_store_append (store, &subchild, &child);
+	      gtk_tree_store_set (store, &subchild, NAME_COLUMN, "Loading...",
+				  FG_COLUMN, "LightSlateGray", -1);
+	    }
+	  else
+	    {
+	      subdir = g_file_get_child (file, g_file_info_get_name (info));
+	      sd_window_populate_project_tree (store, &child, subdir,
+					       level + 1);
+	    }
 	}
     }
 
@@ -107,6 +115,12 @@ sd_window_populate_project_tree (GtkTreeStore *store, GtkTreeIter *parent,
       g_error_free (err);
     }
   g_object_unref (en);
+}
+
+SDWindow *
+sd_window_new (SDApplication *app)
+{
+  return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
 }
 
 void
@@ -134,17 +148,23 @@ sd_window_open (SDWindow *window, GFile *file)
 
   renderer = gtk_cell_renderer_text_new ();
   col = gtk_tree_view_column_new_with_attributes ("Project Tree", renderer,
-						  "text", NAME_COLUMN, NULL);
+						  "text", NAME_COLUMN,
+						  "foreground", FG_COLUMN,
+						  NULL);
   gtk_tree_view_append_column (view, col);
 
   gtk_tree_store_append (store, &parent, NULL);
   gtk_tree_store_set (store, &parent, NAME_COLUMN,
-		      g_file_info_get_display_name (info), -1);
+		      g_file_info_get_display_name (info),
+		      FG_COLUMN, "Black", -1);
   g_object_unref (info);
   gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &parent);
-  sd_window_populate_project_tree (store, &parent, file);
+  sd_window_populate_project_tree (store, &parent, file, 0);
 
   path = gtk_tree_path_new_first ();
   gtk_tree_view_expand_row (view, path, FALSE);
   gtk_tree_path_free (path);
+
+  g_signal_connect (G_OBJECT (view), "row-expanded",
+  		    G_CALLBACK (sd_project_tree_expand), NULL);
 }

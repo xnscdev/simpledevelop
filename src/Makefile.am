@@ -6,12 +6,14 @@ bin_PROGRAMS = simpledevelop
 BUILT_SOURCES = resources.c resources.h
 
 simpledevelop_SOURCES = 	\
+	callbacks.h		\
+	expand-tree.c		\
 	main.c			\
 	resources.c		\
 	resources.h		\
 	sd-application.c	\
 	sd-application.h	\
-	sd-window.c	\
+	sd-window.c		\
 	sd-window.h
 
 simpledevelop_LDADD = $(GTK_LIBS)

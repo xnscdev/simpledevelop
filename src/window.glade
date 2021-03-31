@@ -6,6 +6,8 @@
     <columns>
       <!-- column-name text -->
       <column type="gchararray"/>
+      <!-- column-name cell-foreground -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <template class="SDWindow" parent="GtkWindow">
