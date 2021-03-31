@@ -6,9 +6,9 @@ bin_PROGRAMS = simpledevelop
 BUILT_SOURCES = resources.c resources.h
 
 simpledevelop_SOURCES = 	\
-	callbacks.h		\
-	expand-tree.c		\
 	main.c			\
+	project-tree.c		\
+	project-tree.h		\
 	resources.c		\
 	resources.h		\
 	sd-application.c	\

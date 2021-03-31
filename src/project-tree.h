@@ -1,4 +1,4 @@
-/* callbacks.h -- This file is part of SimpleDevelop.
+/* project-tree.h -- This file is part of SimpleDevelop.
    Copyright (C) 2021 XNSC
 
    SimpleDevelop is free software: you can redistribute it and/or modify
@@ -14,12 +14,12 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef _CALLBACKS_H
-#define _CALLBACKS_H
+#ifndef _PROJECT_TREE_H
+#define _PROJECT_TREE_H
 
 #include <gtk/gtk.h>
 
-void sd_project_tree_expand (GtkTreeView *view, GtkTreeIter *iter,
-			     GtkTreePath *path, gpointer user_data);
+void sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent,
+			       GFile *file);
 
 #endif
