@@ -56,6 +56,7 @@
                   <object class="GtkTextView" id="editor_view">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="editable">False</property>
                     <property name="monospace">True</property>
                   </object>
                 </child>
@@ -75,4 +76,10 @@
       </object>
     </child>
   </template>
+  <object class="GtkTreeStore" id="project_tree_store">
+    <columns>
+      <!-- column-name names -->
+      <column type="gchar"/>
+    </columns>
+  </object>
 </interface>
