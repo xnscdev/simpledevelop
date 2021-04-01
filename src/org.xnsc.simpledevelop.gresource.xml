@@ -2,5 +2,6 @@
 <gresources>
   <gresource prefix="/org/xnsc/simpledevelop">
     <file preprocess="xml-stripblanks">window.glade</file>
+    <file preprocess="xml-stripblanks">preferences.ui</file>
   </gresource>
 </gresources>

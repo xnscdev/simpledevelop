@@ -13,6 +13,8 @@ simpledevelop_SOURCES = 	\
 	resources.h		\
 	sd-application.c	\
 	sd-application.h	\
+	sd-preferences.c	\
+	sd-preferences.h	\
 	sd-window.c		\
 	sd-window.h
 
@@ -23,10 +25,10 @@ gsettings_SCHEMAS = org.xnsc.simpledevelop.gschema.xml
 @GSETTINGS_RULES@
 
 resources = org.xnsc.simpledevelop.gresource.xml
-resources.c: $(resources) window.glade
+resources.c: $(resources) window.glade preferences.ui
 	$(AM_V_GEN) glib-compile-resources --sourcedir=$(srcdir) --target=$@ \
 	    --generate-source --c-name=simpledevelop $(srcdir)/$(resources)
-resources.h: $(resources) window.glade
+resources.h: $(resources) window.glade preferences.ui
 	$(AM_V_GEN) glib-compile-resources --sourcedir=$(srcdir) --target=$@ \
 	    --generate-header --c-name=simpledevelop $(srcdir)/$(resources)
 
@@ -37,4 +39,5 @@ CLEANFILES = *~ resources.c resources.h
 
 EXTRA_DIST =		\
 	window.glade	\
+	preferences.ui	\
 	$(resources)
