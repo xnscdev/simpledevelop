@@ -18,6 +18,10 @@ simpledevelop_SOURCES = 	\
 
 simpledevelop_LDADD = $(GTK_LIBS)
 
+gsettings_SCHEMAS = org.xnsc.simpledevelop.gschema.xml
+
+@GSETTINGS_RULES@
+
 resources = org.xnsc.simpledevelop.gresource.xml
 resources.c: $(resources) window.glade
 	$(AM_V_GEN) glib-compile-resources --sourcedir=$(srcdir) --target=$@ \

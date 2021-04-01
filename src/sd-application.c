@@ -19,19 +19,14 @@
 G_DEFINE_TYPE (SDApplication, sd_application, GTK_TYPE_APPLICATION)
 
 static void
-sd_application_init (SDApplication *self)
+sd_application_open_window (gpointer data, gpointer user_data)
 {
+  gtk_window_present (GTK_WINDOW (data));
 }
 
 static void
 sd_application_activate (GApplication *app)
 {
-}
-
-static void
-sd_application_open_window (gpointer data, gpointer user_data)
-{
-  gtk_window_present (GTK_WINDOW (data));
 }
 
 static void
@@ -48,6 +43,11 @@ sd_application_open (GApplication *app, GFile **files, gint nfiles,
       sd_window_open (window, files[i]);
       gtk_window_present (GTK_WINDOW (window));
     }
+}
+
+static void
+sd_application_init (SDApplication *self)
+{
 }
 
 static void

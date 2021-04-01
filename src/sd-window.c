@@ -20,6 +20,7 @@
 
 struct _SDWindowPrivate
 {
+  GSettings *settings;
   GtkWidget *project_tree;
   GtkWidget *editor_window;
   GtkWidget *editor_view;
@@ -32,7 +33,9 @@ G_DEFINE_TYPE_WITH_PRIVATE (SDWindow, sd_window, GTK_TYPE_WINDOW)
 static void
 sd_window_init (SDWindow *self)
 {
+  SDWindowPrivate *priv = sd_window_get_instance_private (self);
   gtk_widget_init_template (GTK_WIDGET (self));
+  priv->settings = g_settings_new ("org.xnsc.simpledevelop");
 }
 
 static void
@@ -109,8 +112,6 @@ sd_window_editor_init (SDWindowPrivate *priv)
   sd_window_viewport_clear (priv);
   priv->editor_view = gtk_source_view_new ();
 
-  gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW (priv->editor_view),
-					 TRUE);
   gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->editor_view), TRUE);
   gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->editor_view), TRUE);
   gtk_widget_set_hexpand (priv->editor_view, TRUE);
@@ -239,6 +240,8 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
 
   if (priv->editor_view == NULL)
     sd_window_editor_init (priv);
+  g_settings_bind (priv->settings, "line-numbers", priv->editor_view,
+		   "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
 
   view = GTK_TEXT_VIEW (priv->editor_view);
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));

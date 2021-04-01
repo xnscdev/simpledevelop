@@ -20,6 +20,7 @@
 #include <gtk/gtk.h>
 
 #define SD_APPLICATION_ID "org.xnsc.simpledevelop"
+#define SD_RESOURCE_WINDOW_UI "/org/xnsc/simpledevelop/window.glade"
 
 G_BEGIN_DECLS
 

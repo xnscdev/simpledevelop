@@ -19,8 +19,6 @@
 
 #include "sd-application.h"
 
-#define SD_RESOURCE_WINDOW_UI "/org/xnsc/simpledevelop/window.glade"
-
 enum
 {
   NAME_COLUMN = 0,
