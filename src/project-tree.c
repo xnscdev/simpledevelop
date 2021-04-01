@@ -76,7 +76,8 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
 			   GtkTreeViewColumn *col, gpointer user_data)
 {
   GtkTreeModel *model = gtk_tree_view_get_model (view);
-  GFile *file = G_FILE (user_data);
+  SDWindow *window = SD_WINDOW (user_data);
+  GFile *file = window->project_dir;
   GError *err = NULL;
   GQueue *queue;
   GFile *subdir;
@@ -97,6 +98,7 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       g_queue_push_head (queue, name);
       iter = parent;
     }
+  g_object_ref (window->project_dir);
   while (name = g_queue_pop_head (queue), name != NULL)
     {
       subdir = g_file_get_child_for_display_name (file, name, &err);
@@ -120,6 +122,6 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       g_error_free (err);
       return;
     }
-  g_print ("%s", contents);
+  sd_window_editor_open (window, contents, len);
   g_free (contents);
 }

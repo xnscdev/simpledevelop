@@ -36,10 +36,13 @@ G_DECLARE_FINAL_TYPE (SDWindow, sd_window, SD, WINDOW, GtkWindow)
 struct _SDWindow
 {
   GtkWindow parent;
+  GFile *project_dir;
 };
 
 SDWindow *sd_window_new (SDApplication *app);
 void sd_window_open (SDWindow *window, GFile *file);
+void sd_window_editor_clear (SDWindow *self);
+void sd_window_editor_open (SDWindow *self, const gchar *contents, gsize len);
 
 G_END_DECLS
 

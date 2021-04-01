@@ -19,9 +19,10 @@
 
 struct _SDWindowPrivate
 {
-  GFile *project_dir;
   GtkWidget *project_tree;
   GtkViewport *editor_viewport;
+  GtkWidget *lineno_view;
+  GtkWidget *editor_view;
 };
 
 typedef struct _SDWindowPrivate SDWindowPrivate;
@@ -75,8 +76,8 @@ sd_window_build_project_tree (SDWindow *window, GFile *file)
 						  NULL);
   gtk_tree_view_append_column (view, col);
 
-  priv->project_dir = file;
-  g_object_ref (priv->project_dir);
+  window->project_dir = file;
+  g_object_ref (window->project_dir);
   gtk_tree_store_append (store, &parent, NULL);
   gtk_tree_store_set (store, &parent, NAME_COLUMN,
 		      g_file_info_get_display_name (info),
@@ -101,18 +102,35 @@ void
 sd_window_open (SDWindow *window, GFile *file)
 {
   SDWindowPrivate *priv;
-  GtkWidget *label;
   g_return_if_fail (sd_window_build_project_tree (window, file));
   priv = sd_window_get_instance_private (window);
 
-  priv->project_dir = file;
-  g_object_ref (priv->project_dir);
+  window->project_dir = file;
+  sd_window_editor_clear (window);
 
-  /* Default label */
-  label = gtk_label_new ("Open a file in the project tree to open it here");
+  g_signal_connect (GTK_TREE_VIEW (priv->project_tree), "row-activated",
+		    G_CALLBACK (sd_project_tree_activated), window);
+}
+
+void
+sd_window_editor_clear (SDWindow *self)
+{
+  SDWindowPrivate *priv = sd_window_get_instance_private (self);
+  GtkWidget *label =
+    gtk_label_new ("Open a file in the project tree to open it here");
   gtk_container_add (GTK_CONTAINER (priv->editor_viewport), label);
   gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
 
-  g_signal_connect (GTK_TREE_VIEW (priv->project_tree), "row-activated",
-		    G_CALLBACK (sd_project_tree_activated), priv->project_dir);
+  if (priv->lineno_view != NULL)
+    gtk_widget_destroy (priv->lineno_view);
+  priv->lineno_view = NULL;
+  if (priv->editor_view != NULL)
+    gtk_widget_destroy (priv->editor_view);
+  priv->editor_view = NULL;
+}
+
+void
+sd_window_editor_open (SDWindow *self, const gchar *contents, gsize len)
+{
+  g_print ("%s", contents);
 }
