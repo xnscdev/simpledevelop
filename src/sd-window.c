@@ -24,7 +24,7 @@ struct _SDWindowPrivate
   GtkHeaderBar *header;
   GtkMenuItem *preferences_item;
   GtkWidget *project_tree;
-  GtkWidget *editor_view;
+  GtkWidget *editor_tabs;
   gchar *title;
 };
 
@@ -52,7 +52,7 @@ sd_window_class_init (SDWindowClass *klass)
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, project_tree);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
-						SDWindow, editor_view);
+						SDWindow, editor_tabs);
 }
 
 static gboolean
@@ -211,14 +211,23 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
-  GtkTextView *view;
+  GtkSourceView *view;
+  GtkWidget *label;
   gchar *title;
+  gint page;
 
-  g_settings_bind (priv->settings, "line-numbers", priv->editor_view,
+  /* Update title of window */
+  title = g_strdup_printf ("%s - %s", priv->title, filename);
+  gtk_header_bar_set_title (priv->header, title);
+  g_free (title);
+
+  /* Create new editor view */
+  view = GTK_SOURCE_VIEW (gtk_source_view_new ());
+  gtk_text_view_set_monospace (GTK_TEXT_VIEW (view), TRUE);
+  g_settings_bind (priv->settings, "line-numbers", view,
 		   "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
 
-  view = GTK_TEXT_VIEW (priv->editor_view);
-  buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));
+  buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
 
   /* Apply syntax highlighting to buffer */
@@ -231,8 +240,9 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
       gtk_source_buffer_set_language (buffer, lang);
     }
 
-  /* Update title of window */
-  title = g_strdup_printf ("%s - %s", priv->title, filename);
-  gtk_header_bar_set_title (priv->header, title);
-  g_free (title);
+  /* Add view to notebook */
+  label = gtk_label_new (filename);
+  page = gtk_notebook_append_page (GTK_NOTEBOOK (priv->editor_tabs),
+				   GTK_WIDGET (view), label);
+  gtk_widget_show_all (priv->editor_tabs);
 }
