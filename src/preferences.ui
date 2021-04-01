@@ -16,9 +16,8 @@
 	    <child>
 	      <object class="GtkCheckButton" id="linenos">
 		<property name="visible">True</property>
-		<property name="label">_Show line numbers:</property>
+		<property name="label">_Show line numbers</property>
 		<property name="use-underline">True</property>
-		<property name="mnemonic-widget">linenos</property>
 	      </object>
 	      <packing>
 		<property name="left-attach">0</property>

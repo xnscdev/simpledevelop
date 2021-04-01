@@ -30,6 +30,7 @@ struct _SDPreferences
 };
 
 SDPreferences *sd_preferences_new (SDWindow *window);
+void sd_preferences_activate (GtkMenuItem *item, gpointer user_data);
 
 G_END_DECLS
 

@@ -61,3 +61,10 @@ sd_preferences_new (SDWindow *window)
   return g_object_new (SD_TYPE_PREFERENCES, "transient-for", window,
 		       "use-header-bar", TRUE, NULL);
 }
+
+void
+sd_preferences_activate (GtkMenuItem *item, gpointer user_data)
+{
+  SDPreferences *prefs = sd_preferences_new (SD_WINDOW (user_data));
+  gtk_window_present (GTK_WINDOW (prefs));
+}

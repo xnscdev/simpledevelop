@@ -16,11 +16,12 @@
 
 #include <gtksourceview/gtksource.h>
 #include "project-tree.h"
-#include "sd-window.h"
+#include "sd-preferences.h"
 
 struct _SDWindowPrivate
 {
   GSettings *settings;
+  GtkMenuItem *preferences_item;
   GtkWidget *project_tree;
   GtkWidget *editor_window;
   GtkWidget *editor_view;
@@ -43,6 +44,8 @@ sd_window_class_init (SDWindowClass *klass)
 {
   gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (klass),
 					       SD_RESOURCE_WINDOW_UI);
+  gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
+						SDWindow, preferences_item);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, project_tree);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
@@ -213,6 +216,8 @@ sd_window_open (SDWindow *window, GFile *file)
   window->project_dir = file;
   sd_window_editor_clear (window);
 
+  g_signal_connect (priv->preferences_item, "activate",
+		    G_CALLBACK (sd_preferences_activate), window);
   g_signal_connect (priv->project_tree, "row-activated",
 		    G_CALLBACK (sd_project_tree_activated), window);
 }
