@@ -24,7 +24,6 @@ struct _SDWindowPrivate
   GtkHeaderBar *header;
   GtkMenuItem *preferences_item;
   GtkWidget *project_tree;
-  GtkWidget *editor_window;
   GtkWidget *editor_view;
   gchar *title;
 };
@@ -53,7 +52,7 @@ sd_window_class_init (SDWindowClass *klass)
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, project_tree);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
-						SDWindow, editor_window);
+						SDWindow, editor_view);
 }
 
 static gboolean
@@ -100,31 +99,6 @@ sd_window_build_project_tree (SDWindow *window, GFile *file)
   gtk_tree_view_expand_row (view, path, FALSE);
   gtk_tree_path_free (path);
   return TRUE;
-}
-
-static void
-sd_window_viewport_clear (SDWindowPrivate *priv)
-{
-  GList *child =
-    gtk_container_get_children (GTK_CONTAINER (priv->editor_window));
-  GList *iter;
-  for (iter = child; iter != NULL; iter = g_list_next (iter))
-    gtk_widget_destroy (GTK_WIDGET (iter->data));
-  g_list_free (child);
-}
-
-static void
-sd_window_editor_init (SDWindowPrivate *priv)
-{
-  sd_window_viewport_clear (priv);
-  priv->editor_view = gtk_source_view_new ();
-
-  gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->editor_view), TRUE);
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->editor_view), TRUE);
-  gtk_widget_set_hexpand (priv->editor_view, TRUE);
-
-  gtk_container_add (GTK_CONTAINER (priv->editor_window), priv->editor_view);
-  gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
 }
 
 static GtkSourceLanguage *
@@ -217,9 +191,7 @@ sd_window_open (SDWindow *window, GFile *file)
   gchar *basename;
   g_return_if_fail (sd_window_build_project_tree (window, file));
   priv = sd_window_get_instance_private (window);
-
   window->project_dir = file;
-  sd_window_editor_clear (window);
 
   basename = g_file_get_basename (file);
   priv->title = g_strdup_printf ("SimpleDevelop - %s", basename);
@@ -233,18 +205,6 @@ sd_window_open (SDWindow *window, GFile *file)
 }
 
 void
-sd_window_editor_clear (SDWindow *self)
-{
-  SDWindowPrivate *priv = sd_window_get_instance_private (self);
-  GtkWidget *label =
-    gtk_label_new ("Open a file in the project tree to open it here");
-  sd_window_viewport_clear (priv);
-  priv->editor_view = NULL;
-  gtk_container_add (GTK_CONTAINER (priv->editor_window), label);
-  gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
-}
-
-void
 sd_window_editor_open (SDWindow *self, const gchar *filename,
 		       const gchar *contents, gsize len)
 {
@@ -254,8 +214,6 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   GtkTextView *view;
   gchar *title;
 
-  if (priv->editor_view == NULL)
-    sd_window_editor_init (priv);
   g_settings_bind (priv->settings, "line-numbers", priv->editor_view,
 		   "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
 
