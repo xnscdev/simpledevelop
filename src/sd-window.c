@@ -14,6 +14,7 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <gtksourceview/gtksource.h>
 #include "project-tree.h"
 #include "sd-window.h"
 
@@ -21,7 +22,6 @@ struct _SDWindowPrivate
 {
   GtkWidget *project_tree;
   GtkWidget *editor_window;
-  GtkWidget *lineno_view;
   GtkWidget *editor_view;
 };
 
@@ -107,9 +107,14 @@ static void
 sd_window_editor_init (SDWindowPrivate *priv)
 {
   sd_window_viewport_clear (priv);
-  priv->editor_view = gtk_text_view_new ();
+  priv->editor_view = gtk_source_view_new ();
+
+  gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW (priv->editor_view),
+					 TRUE);
   gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->editor_view), TRUE);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (priv->editor_view), TRUE);
   gtk_widget_set_hexpand (priv->editor_view, TRUE);
+
   gtk_container_add (GTK_CONTAINER (priv->editor_window), priv->editor_view);
   gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
 }
@@ -130,7 +135,7 @@ sd_window_open (SDWindow *window, GFile *file)
   window->project_dir = file;
   sd_window_editor_clear (window);
 
-  g_signal_connect (GTK_TREE_VIEW (priv->project_tree), "row-activated",
+  g_signal_connect (priv->project_tree, "row-activated",
 		    G_CALLBACK (sd_project_tree_activated), window);
 }
 
@@ -150,9 +155,11 @@ void
 sd_window_editor_open (SDWindow *self, const gchar *contents, gsize len)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
-  GtkTextBuffer *buffer;
+  GtkTextView *view;
+  GtkSourceBuffer *buffer;
   if (priv->editor_view == NULL)
     sd_window_editor_init (priv);
-  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor_view));
-  gtk_text_buffer_set_text (buffer, contents, len);
+  view = GTK_TEXT_VIEW (priv->editor_view);
+  buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));
+  gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
 }
