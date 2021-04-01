@@ -92,6 +92,36 @@ sd_window_build_project_tree (SDWindow *window, GFile *file)
   return TRUE;
 }
 
+static void
+sd_window_viewport_clear (SDWindowPrivate *priv)
+{
+  GList *child =
+    gtk_container_get_children (GTK_CONTAINER (priv->editor_viewport));
+  GList *iter;
+  for (iter = child; iter != NULL; iter = g_list_next (iter))
+    gtk_widget_destroy (GTK_WIDGET (iter->data));
+  g_list_free (child);
+}
+
+static void
+sd_window_editor_init (SDWindowPrivate *priv)
+{
+  GtkContainer *box =
+    GTK_CONTAINER (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
+  sd_window_viewport_clear (priv);
+
+  priv->lineno_view = gtk_text_view_new ();
+  gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->lineno_view), TRUE);
+
+  priv->editor_view = gtk_text_view_new ();
+  gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->editor_view), TRUE);
+
+  gtk_container_add (box, priv->lineno_view);
+  gtk_container_add (box, priv->editor_view);
+  gtk_container_add (GTK_CONTAINER (priv->editor_viewport), GTK_WIDGET (box));
+  gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
+}
+
 SDWindow *
 sd_window_new (SDApplication *app)
 {
@@ -118,19 +148,22 @@ sd_window_editor_clear (SDWindow *self)
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
   GtkWidget *label =
     gtk_label_new ("Open a file in the project tree to open it here");
+
+  sd_window_viewport_clear (priv);
+  priv->lineno_view = NULL;
+  priv->editor_view = NULL;
+
   gtk_container_add (GTK_CONTAINER (priv->editor_viewport), label);
   gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
-
-  if (priv->lineno_view != NULL)
-    gtk_widget_destroy (priv->lineno_view);
-  priv->lineno_view = NULL;
-  if (priv->editor_view != NULL)
-    gtk_widget_destroy (priv->editor_view);
-  priv->editor_view = NULL;
 }
 
 void
 sd_window_editor_open (SDWindow *self, const gchar *contents, gsize len)
 {
-  g_print ("%s", contents);
+  SDWindowPrivate *priv = sd_window_get_instance_private (self);
+  GtkTextBuffer *buffer;
+  if (priv->editor_view == NULL)
+    sd_window_editor_init (priv);
+  buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (priv->editor_view));
+  gtk_text_buffer_set_text (buffer, contents, len);
 }
