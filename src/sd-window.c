@@ -20,7 +20,7 @@
 struct _SDWindowPrivate
 {
   GtkWidget *project_tree;
-  GtkViewport *editor_viewport;
+  GtkWidget *editor_window;
   GtkWidget *lineno_view;
   GtkWidget *editor_view;
 };
@@ -43,7 +43,7 @@ sd_window_class_init (SDWindowClass *klass)
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, project_tree);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
-						SDWindow, editor_viewport);
+						SDWindow, editor_window);
 }
 
 static gboolean
@@ -96,7 +96,7 @@ static void
 sd_window_viewport_clear (SDWindowPrivate *priv)
 {
   GList *child =
-    gtk_container_get_children (GTK_CONTAINER (priv->editor_viewport));
+    gtk_container_get_children (GTK_CONTAINER (priv->editor_window));
   GList *iter;
   for (iter = child; iter != NULL; iter = g_list_next (iter))
     gtk_widget_destroy (GTK_WIDGET (iter->data));
@@ -106,20 +106,12 @@ sd_window_viewport_clear (SDWindowPrivate *priv)
 static void
 sd_window_editor_init (SDWindowPrivate *priv)
 {
-  GtkContainer *box =
-    GTK_CONTAINER (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
   sd_window_viewport_clear (priv);
-
-  priv->lineno_view = gtk_text_view_new ();
-  gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->lineno_view), TRUE);
-
   priv->editor_view = gtk_text_view_new ();
   gtk_text_view_set_monospace (GTK_TEXT_VIEW (priv->editor_view), TRUE);
-
-  gtk_container_add (box, priv->lineno_view);
-  gtk_container_add (box, priv->editor_view);
-  gtk_container_add (GTK_CONTAINER (priv->editor_viewport), GTK_WIDGET (box));
-  gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
+  gtk_widget_set_hexpand (priv->editor_view, TRUE);
+  gtk_container_add (GTK_CONTAINER (priv->editor_window), priv->editor_view);
+  gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
 }
 
 SDWindow *
@@ -148,13 +140,10 @@ sd_window_editor_clear (SDWindow *self)
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
   GtkWidget *label =
     gtk_label_new ("Open a file in the project tree to open it here");
-
   sd_window_viewport_clear (priv);
-  priv->lineno_view = NULL;
   priv->editor_view = NULL;
-
-  gtk_container_add (GTK_CONTAINER (priv->editor_viewport), label);
-  gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
+  gtk_container_add (GTK_CONTAINER (priv->editor_window), label);
+  gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
 }
 
 void

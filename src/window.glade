@@ -69,13 +69,7 @@
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkViewport" id="editor_viewport">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
