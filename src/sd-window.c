@@ -21,10 +21,12 @@
 struct _SDWindowPrivate
 {
   GSettings *settings;
+  GtkHeaderBar *header;
   GtkMenuItem *preferences_item;
   GtkWidget *project_tree;
   GtkWidget *editor_window;
   GtkWidget *editor_view;
+  gchar *title;
 };
 
 typedef struct _SDWindowPrivate SDWindowPrivate;
@@ -44,6 +46,8 @@ sd_window_class_init (SDWindowClass *klass)
 {
   gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (klass),
 					       SD_RESOURCE_WINDOW_UI);
+  gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
+						SDWindow, header);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, preferences_item);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
@@ -210,11 +214,17 @@ void
 sd_window_open (SDWindow *window, GFile *file)
 {
   SDWindowPrivate *priv;
+  gchar *basename;
   g_return_if_fail (sd_window_build_project_tree (window, file));
   priv = sd_window_get_instance_private (window);
 
   window->project_dir = file;
   sd_window_editor_clear (window);
+
+  basename = g_file_get_basename (file);
+  priv->title = g_strdup_printf ("SimpleDevelop - %s", basename);
+  g_free (basename);
+  gtk_header_bar_set_title (priv->header, priv->title);
 
   g_signal_connect (priv->preferences_item, "activate",
 		    G_CALLBACK (sd_preferences_activate), window);
@@ -242,6 +252,7 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
   GtkTextView *view;
+  gchar *title;
 
   if (priv->editor_view == NULL)
     sd_window_editor_init (priv);
@@ -252,6 +263,7 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
 
+  /* Apply syntax highlighting to buffer */
   lang = sd_window_guess_lang (filename, contents, len);
   if (lang == NULL)
     g_debug ("Failed to guess language, applying default highlighting");
@@ -260,4 +272,9 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
       g_debug ("Guessed language as %s", gtk_source_language_get_name (lang));
       gtk_source_buffer_set_language (buffer, lang);
     }
+
+  /* Update title of window */
+  title = g_strdup_printf ("%s - %s", priv->title, filename);
+  gtk_header_bar_set_title (priv->header, title);
+  g_free (title);
 }

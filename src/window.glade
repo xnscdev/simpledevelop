@@ -25,8 +25,8 @@
   <template class="SDWindow" parent="GtkWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">SimpleDevelop</property>
-    <property name="default_width">720</property>
-    <property name="default_height">480</property>
+    <property name="default_width">1280</property>
+    <property name="default_height">720</property>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header">
         <property name="visible">True</property>
@@ -63,6 +63,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
+                <property name="min_content_width">120</property>
                 <child>
                   <object class="GtkTreeView" id="project_tree">
                     <property name="visible">True</property>
@@ -75,7 +76,7 @@
                 </child>
               </object>
               <packing>
-                <property name="resize">True</property>
+                <property name="resize">False</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
