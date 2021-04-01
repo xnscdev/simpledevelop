@@ -21,6 +21,8 @@ struct _SDWindowPrivate
 {
   GFile *project_dir;
   GtkWidget *project_tree;
+  GtkViewport *editor_viewport;
+  GtkWidget *lineno_view;
   GtkWidget *editor_view;
 };
 
@@ -42,17 +44,11 @@ sd_window_class_init (SDWindowClass *klass)
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, project_tree);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
-						SDWindow, editor_view);
+						SDWindow, editor_viewport);
 }
 
-SDWindow *
-sd_window_new (SDApplication *app)
-{
-  return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
-}
-
-void
-sd_window_open (SDWindow *window, GFile *file)
+static gboolean
+sd_window_build_project_tree (SDWindow *window, GFile *file)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (window);
   GtkTreeView *view = GTK_TREE_VIEW (priv->project_tree);
@@ -71,7 +67,7 @@ sd_window_open (SDWindow *window, GFile *file)
       g_critical ("Failed to get info for %s: %s", path, err->message);
       g_free (path);
       g_error_free (err);
-      return;
+      return FALSE;
     }
 
   renderer = gtk_cell_renderer_text_new ();
@@ -94,4 +90,25 @@ sd_window_open (SDWindow *window, GFile *file)
   path = gtk_tree_path_new_first ();
   gtk_tree_view_expand_row (view, path, FALSE);
   gtk_tree_path_free (path);
+  return TRUE;
+}
+
+SDWindow *
+sd_window_new (SDApplication *app)
+{
+  return g_object_new (SD_TYPE_WINDOW, "application", app, NULL);
+}
+
+void
+sd_window_open (SDWindow *window, GFile *file)
+{
+  SDWindowPrivate *priv;
+  GtkWidget *label;
+  g_return_if_fail (sd_window_build_project_tree (window, file));
+  priv = sd_window_get_instance_private (window);
+  priv->lineno_view = NULL;
+  priv->editor_view = NULL;
+  label = gtk_label_new ("Open a file in the project tree to open it here");
+  gtk_container_add (GTK_CONTAINER (priv->editor_viewport), label);
+  gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
 }
