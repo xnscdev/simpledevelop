@@ -152,14 +152,33 @@ sd_window_editor_clear (SDWindow *self)
 }
 
 void
-sd_window_editor_open (SDWindow *self, const gchar *contents, gsize len)
+sd_window_editor_open (SDWindow *self, const gchar *filename,
+		       const gchar *contents, gsize len)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
-  GtkTextView *view;
+  GtkSourceLanguageManager *mgr = gtk_source_language_manager_get_default ();
+  GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
+  GtkTextView *view;
+  gboolean uncertain;
+  gchar *content_type;
+
   if (priv->editor_view == NULL)
     sd_window_editor_init (priv);
+
   view = GTK_TEXT_VIEW (priv->editor_view);
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
+
+  content_type = g_content_type_guess (filename, NULL, 0, &uncertain);
+  if (uncertain)
+    {
+      g_free (content_type);
+      content_type = NULL;
+    }
+  lang = gtk_source_language_manager_guess_language (mgr, filename,
+						     content_type);
+  g_debug ("Guessed language as %s", gtk_source_language_get_name (lang));
+  gtk_source_buffer_set_language (buffer, lang);
+  g_free (content_type);
 }

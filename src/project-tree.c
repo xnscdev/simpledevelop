@@ -84,6 +84,7 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
   GtkTreeIter iter;
   GtkTreeIter parent;
   gchar *name;
+  gchar *save;
   gchar *contents;
   gsize len;
 
@@ -91,6 +92,7 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
   if (gtk_tree_model_iter_has_child (model, &iter))
     return;
 
+  gtk_tree_model_get (model, &iter, NAME_COLUMN, &save, -1);
   queue = g_queue_new ();
   while (gtk_tree_model_iter_parent (model, &parent, &iter))
     {
@@ -122,6 +124,7 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       g_error_free (err);
       return;
     }
-  sd_window_editor_open (window, contents, len);
+  sd_window_editor_open (window, save, contents, len);
+  g_free (save);
   g_free (contents);
 }
