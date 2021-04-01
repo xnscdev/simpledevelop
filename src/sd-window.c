@@ -119,6 +119,83 @@ sd_window_editor_init (SDWindowPrivate *priv)
   gtk_widget_show_all (GTK_WIDGET (priv->editor_window));
 }
 
+static GtkSourceLanguage *
+sd_window_guess_lang (const gchar *filename, const gchar *contents, gsize len)
+{
+  GtkSourceLanguageManager *mgr = gtk_source_language_manager_get_default ();
+  GtkSourceLanguage *lang;
+  gboolean uncertain;
+  gchar *content_type;
+
+  /* Try guessing using libgtksourceview */
+  content_type = g_content_type_guess (filename, NULL, 0, &uncertain);
+  if (uncertain)
+    {
+      g_free (content_type);
+      content_type = NULL;
+    }
+  lang = gtk_source_language_manager_guess_language (mgr, filename,
+						     content_type);
+  g_free (content_type);
+  if (lang != NULL)
+    return lang;
+
+  /* Try guessing using hash bang */
+  if (len > 2 && contents[0] == '#' && contents[1] == '!')
+    {
+      GtkSourceLanguage *lang;
+      const gchar *ptr = &contents[2];
+      const gchar *end;
+      gchar *path;
+      gchar *basename;
+      GFile *file;
+      gsize pathlen = 0;
+
+      if (*ptr == ' ' && len > 2)
+	ptr++, len--;
+
+      end = ptr;
+      while (!g_ascii_isspace (*end) && len > 2)
+	end++, pathlen++, len--;
+      path = g_strndup (ptr, pathlen);
+      file = g_file_new_for_path (path);
+      g_free (path);
+      basename = g_file_get_basename (file);
+      g_object_unref (file);
+
+      if (!g_strcmp0 (basename, "sh") || !g_strcmp0 (basename, "bash"))
+	{
+	  lang = gtk_source_language_manager_get_language (mgr, "sh");
+	  goto hashbang_found;
+	}
+      if (!g_strcmp0 (basename, "perl"))
+	{
+	  lang = gtk_source_language_manager_get_language (mgr, "perl");
+	  goto hashbang_found;
+	}
+      if (!g_strcmp0 (basename, "python"))
+	{
+	  lang = gtk_source_language_manager_get_language (mgr, "python");
+	  goto hashbang_found;
+	}
+      if (!g_strcmp0 (basename, "python3"))
+	{
+	  lang = gtk_source_language_manager_get_language (mgr, "python3");
+	  goto hashbang_found;
+	}
+
+      g_free (basename);
+      goto finish;
+
+    hashbang_found:
+      g_free (basename);
+      return lang;
+    }
+
+ finish:
+  return NULL;
+}
+
 SDWindow *
 sd_window_new (SDApplication *app)
 {
@@ -156,12 +233,9 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
 		       const gchar *contents, gsize len)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
-  GtkSourceLanguageManager *mgr = gtk_source_language_manager_get_default ();
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
   GtkTextView *view;
-  gboolean uncertain;
-  gchar *content_type;
 
   if (priv->editor_view == NULL)
     sd_window_editor_init (priv);
@@ -170,15 +244,12 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (view));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
 
-  content_type = g_content_type_guess (filename, NULL, 0, &uncertain);
-  if (uncertain)
+  lang = sd_window_guess_lang (filename, contents, len);
+  if (lang == NULL)
+    g_debug ("Failed to guess language, applying default highlighting");
+  else
     {
-      g_free (content_type);
-      content_type = NULL;
+      g_debug ("Guessed language as %s", gtk_source_language_get_name (lang));
+      gtk_source_buffer_set_language (buffer, lang);
     }
-  lang = gtk_source_language_manager_guess_language (mgr, filename,
-						     content_type);
-  g_debug ("Guessed language as %s", gtk_source_language_get_name (lang));
-  gtk_source_buffer_set_language (buffer, lang);
-  g_free (content_type);
 }
