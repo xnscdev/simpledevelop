@@ -21,5 +21,7 @@
 
 void sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent,
 			       GFile *file);
+void sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
+				GtkTreeViewColumn *col, gpointer user_data);
 
 #endif

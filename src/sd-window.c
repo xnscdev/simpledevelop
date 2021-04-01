@@ -22,8 +22,6 @@ struct _SDWindowPrivate
   GFile *project_dir;
   GtkWidget *project_tree;
   GtkViewport *editor_viewport;
-  GtkWidget *lineno_view;
-  GtkWidget *editor_view;
 };
 
 typedef struct _SDWindowPrivate SDWindowPrivate;
@@ -106,9 +104,15 @@ sd_window_open (SDWindow *window, GFile *file)
   GtkWidget *label;
   g_return_if_fail (sd_window_build_project_tree (window, file));
   priv = sd_window_get_instance_private (window);
-  priv->lineno_view = NULL;
-  priv->editor_view = NULL;
+
+  priv->project_dir = file;
+  g_object_ref (priv->project_dir);
+
+  /* Default label */
   label = gtk_label_new ("Open a file in the project tree to open it here");
   gtk_container_add (GTK_CONTAINER (priv->editor_viewport), label);
   gtk_widget_show_all (GTK_WIDGET (priv->editor_viewport));
+
+  g_signal_connect (GTK_TREE_VIEW (priv->project_tree), "row-activated",
+		    G_CALLBACK (sd_project_tree_activated), priv->project_dir);
 }

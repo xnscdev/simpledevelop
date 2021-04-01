@@ -70,3 +70,56 @@ sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
     }
   g_object_unref (en);
 }
+
+void
+sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
+			   GtkTreeViewColumn *col, gpointer user_data)
+{
+  GtkTreeModel *model = gtk_tree_view_get_model (view);
+  GFile *file = G_FILE (user_data);
+  GError *err = NULL;
+  GQueue *queue;
+  GFile *subdir;
+  GtkTreeIter iter;
+  GtkTreeIter parent;
+  gchar *name;
+  gchar *contents;
+  gsize len;
+
+  g_return_if_fail (gtk_tree_model_get_iter (model, &iter, path));
+  if (gtk_tree_model_iter_has_child (model, &iter))
+    return;
+
+  queue = g_queue_new ();
+  while (gtk_tree_model_iter_parent (model, &parent, &iter))
+    {
+      gtk_tree_model_get (model, &iter, NAME_COLUMN, &name, -1);
+      g_queue_push_head (queue, name);
+      iter = parent;
+    }
+  while (name = g_queue_pop_head (queue), name != NULL)
+    {
+      subdir = g_file_get_child_for_display_name (file, name, &err);
+      g_free (name);
+      if (err != NULL)
+	{
+	  g_critical ("Failed to build file handler: %s", err->message);
+	  g_error_free (err);
+	  g_queue_free_full (queue, g_free);
+	  return;
+	}
+      g_object_unref (file);
+      file = subdir;
+    }
+  g_queue_free (queue);
+
+  g_file_load_contents (file, NULL, &contents, &len, NULL, &err);
+  if (err != NULL)
+    {
+      g_critical ("Failed to read file contents: %s", err->message);
+      g_error_free (err);
+      return;
+    }
+  g_print ("%s", contents);
+  g_free (contents);
+}
