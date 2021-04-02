@@ -52,7 +52,8 @@ sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
       gtk_tree_store_append (store, &child, parent);
       subfile = g_file_get_child (file, g_file_info_get_name (info));
       gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, FG_COLUMN,
-			  "Black", FILE_COLUMN, subfile, -1);
+			  *dispname == '.' ? "LightSlateGray" : "Black",
+			  FILE_COLUMN, subfile, -1);
 
       if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY)
         sd_project_tree_populate (store, &child, subfile);
