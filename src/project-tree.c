@@ -97,6 +97,8 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       return;
     }
 
+  /* Don't open binary files */
+  g_return_if_fail (g_utf8_validate (contents, len, NULL));
   sd_window_editor_open (window, name, contents, len);
   g_free (name);
   g_free (contents);
