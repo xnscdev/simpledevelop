@@ -196,6 +196,35 @@ sd_window_close_tab (GtkWidget *widget, GdkEvent *event, gpointer user_data)
   return TRUE;
 }
 
+static void
+sd_window_editor_switch_page (GtkNotebook *nb, GtkWidget *page, guint pnum,
+			      gpointer user_data)
+{
+  SDWindow *window = SD_WINDOW (user_data);
+  SDWindowPrivate *priv = sd_window_get_instance_private (window);
+  GtkWidget *child = gtk_notebook_get_nth_page (nb, pnum);
+  GtkWidget *tab = gtk_notebook_get_tab_label (nb, child);
+  GList *list = gtk_container_get_children (GTK_CONTAINER (tab));
+  const gchar *name = NULL;
+  gchar *title;
+  GList *ptr;
+
+  for (ptr = list; ptr != NULL; ptr = g_list_next (ptr))
+    {
+      if (GTK_IS_LABEL (ptr->data))
+	{
+	  name = gtk_label_get_text (GTK_LABEL (ptr->data));
+	  break;
+	}
+    }
+  g_list_free (list);
+
+  g_return_if_fail (name != NULL);
+  title = g_strdup_printf ("%s - %s", priv->title, name);
+  gtk_header_bar_set_title (priv->header, title);
+  g_free (title);
+}
+
 SDWindow *
 sd_window_new (SDApplication *app)
 {
@@ -221,6 +250,8 @@ sd_window_open (SDWindow *window, GFile *file)
 		    G_CALLBACK (sd_preferences_activate), window);
   g_signal_connect (priv->project_tree, "row-activated",
 		    G_CALLBACK (sd_project_tree_activated), window);
+  g_signal_connect (priv->editor_tabs, "switch-page",
+		    G_CALLBACK (sd_window_editor_switch_page), window);
 }
 
 void
