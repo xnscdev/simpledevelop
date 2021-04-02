@@ -266,17 +266,26 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   GtkWidget *tab;
   GtkWidget *event_box;
   GtkWidget *close_button;
+  GtkTextTag *tag;
+  GtkTextIter start;
+  GtkTextIter end;
   SDEditorTabData *user_data;
   gint page;
 
   /* Create new editor view */
   view = GTK_SOURCE_VIEW (gtk_source_view_new ());
-  gtk_text_view_set_monospace (GTK_TEXT_VIEW (view), TRUE);
   g_settings_bind (priv->settings, "line-numbers", view,
 		   "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
 
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
+
+  tag = gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer), NULL, NULL);
+  g_settings_bind (priv->settings, "font", tag, "font",
+		   G_SETTINGS_BIND_DEFAULT);
+  gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &start);
+  gtk_text_buffer_get_end_iter (GTK_TEXT_BUFFER (buffer), &end);
+  gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (buffer), tag, &start, &end);
 
   /* Apply syntax highlighting to buffer */
   lang = sd_window_guess_lang (filename, contents, len);

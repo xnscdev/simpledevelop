@@ -20,6 +20,7 @@ struct _SDPreferencesPrivate
 {
   GSettings *settings;
   GtkWidget *linenos;
+  GtkWidget *font;
 };
 
 typedef struct _SDPreferencesPrivate SDPreferencesPrivate;
@@ -43,6 +44,8 @@ sd_preferences_init (SDPreferences *self)
   priv->settings = g_settings_new ("org.xnsc.simpledevelop");
   g_settings_bind (priv->settings, "line-numbers", priv->linenos, "active",
 		   G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind (priv->settings, "font", priv->font, "font",
+		   G_SETTINGS_BIND_DEFAULT);
 }
 
 static void
@@ -53,6 +56,8 @@ sd_preferences_class_init (SDPreferencesClass *klass)
 					       SD_RESOURCE_PREFERENCES_UI);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDPreferences, linenos);
+  gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
+						SDPreferences, font);
 }
 
 SDPreferences *
