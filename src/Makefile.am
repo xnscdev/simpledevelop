@@ -1,5 +1,6 @@
 AM_CPPFLAGS = -D_GNU_SOURCE
-AM_CFLAGS = -std=gnu99 -Wall -pedantic -Werror=implicit $(GTK_CFLAGS)
+AM_CFLAGS = -std=gnu99 -Wall -pedantic -Werror=implicit \
+	-Wno-overlength-strings @GTK_CFLAGS@
 
 bin_PROGRAMS = simpledevelop
 
@@ -18,7 +19,7 @@ simpledevelop_SOURCES = 	\
 	sd-window.c		\
 	sd-window.h
 
-simpledevelop_LDADD = $(GTK_LIBS)
+simpledevelop_LDADD = @GTK_LIBS@
 
 gsettings_SCHEMAS = org.xnsc.simpledevelop.gschema.xml
 

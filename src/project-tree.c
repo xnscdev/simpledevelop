@@ -78,7 +78,6 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
   SDWindow *window = SD_WINDOW (user_data);
   GError *err = NULL;
   GFile *file;
-  GFileInfo *info;
   GtkTreeIter iter;
   gchar *contents;
   gchar *name;

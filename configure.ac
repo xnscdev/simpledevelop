@@ -8,8 +8,6 @@ AC_PROG_CC
 GLIB_GSETTINGS
 
 PKG_CHECK_MODULES([GTK], [gtk+-3.0 >= 3.20 gtksourceview-3.0])
-AC_SUBST([GTK_CFLAGS])
-AC_SUBST([GTK_LIBS])
 
 AC_CONFIG_FILES([Makefile src/Makefile src/simpledevelop.desktop])
 AC_OUTPUT
