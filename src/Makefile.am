@@ -12,6 +12,8 @@ simpledevelop_SOURCES = 	\
 	resources.h		\
 	sd-application.c	\
 	sd-application.h	\
+	sd-editor.c		\
+	sd-editor.h		\
 	sd-preferences.c	\
 	sd-preferences.h	\
 	sd-project-tree.c	\

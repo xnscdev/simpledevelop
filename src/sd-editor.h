@@ -1,4 +1,4 @@
-/* sd-application.h -- This file is part of SimpleDevelop.
+/* sd-editor.h -- This file is part of SimpleDevelop.
    Copyright (C) 2021 XNSC
 
    SimpleDevelop is free software: you can redistribute it and/or modify
@@ -14,29 +14,24 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef _SD_APPLICATION_H
-#define _SD_APPLICATION_H
+#ifndef _SD_EDITOR_H
+#define _SD_EDITOR_H
 
-#include <gtk/gtk.h>
-
-#define SD_APPLICATION_ID "org.xnsc.simpledevelop"
-#define SD_SETTINGS_NAME SD_APPLICATION_ID
-
-#define SD_RESOURCE_WINDOW_UI "/org/xnsc/simpledevelop/window.glade"
-#define SD_RESOURCE_PREFERENCES_UI "/org/xnsc/simpledevelop/preferences.ui"
+#include "sd-window.h"
 
 G_BEGIN_DECLS
 
-#define SD_TYPE_APPLICATION sd_application_get_type ()
-G_DECLARE_FINAL_TYPE (SDApplication, sd_application, SD, APPLICATION,
-		      GtkApplication)
+#define SD_TYPE_EDITOR sd_editor_get_type ()
+G_DECLARE_FINAL_TYPE (SDEditor, sd_editor, SD, EDITOR, GtkNotebook)
 
-struct _SDApplication
+struct _SDEditor
 {
-  GtkApplication parent;
+  GtkNotebook parent;
 };
 
-SDApplication *sd_application_new (void);
+SDEditor *sd_editor_new (SDWindow *window);
+void sd_editor_open_tab (SDEditor *self, const gchar *filename,
+			 const gchar *contents, gsize len);
 
 G_END_DECLS
 

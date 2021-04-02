@@ -41,7 +41,7 @@ sd_preferences_init (SDPreferences *self)
 {
   SDPreferencesPrivate *priv = sd_preferences_get_instance_private (self);
   gtk_widget_init_template (GTK_WIDGET (self));
-  priv->settings = g_settings_new ("org.xnsc.simpledevelop");
+  priv->settings = g_settings_new (SD_SETTINGS_NAME);
   g_settings_bind (priv->settings, "line-numbers", priv->linenos, "active",
 		   G_SETTINGS_BIND_DEFAULT);
   g_settings_bind (priv->settings, "font", priv->font, "font",

@@ -31,9 +31,9 @@ struct _SDWindow
 
 SDWindow *sd_window_new (SDApplication *app);
 void sd_window_open (SDWindow *window, GFile *file);
-void sd_window_editor_clear (SDWindow *self);
 void sd_window_editor_open (SDWindow *self, const gchar *filename,
 			    const gchar *contents, gsize len);
+void sd_window_update_title (SDWindow *self, const gchar *name);
 
 G_END_DECLS
 
