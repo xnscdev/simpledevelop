@@ -262,6 +262,7 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
   GtkSourceView *view;
+  GtkWidget *window;
   GtkWidget *tab;
   GtkWidget *event_box;
   GtkWidget *close_button;
@@ -292,11 +293,13 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   event_box = gtk_event_box_new ();
   close_button = gtk_image_new_from_icon_name ("application-exit",
 					       GTK_ICON_SIZE_BUTTON);
+  window = gtk_scrolled_window_new (NULL, NULL);
   gtk_container_add (GTK_CONTAINER (event_box), close_button);
   gtk_container_add (GTK_CONTAINER (tab), event_box);
   gtk_container_add (GTK_CONTAINER (tab), gtk_label_new (filename));
+  gtk_container_add (GTK_CONTAINER (window), GTK_WIDGET (view));
   page = gtk_notebook_append_page (GTK_NOTEBOOK (priv->editor_tabs),
-				   GTK_WIDGET (view), tab);
+				   window, tab);
 
   user_data = g_malloc (sizeof (SDEditorTabData));
   user_data->nb = GTK_NOTEBOOK (priv->editor_tabs);
