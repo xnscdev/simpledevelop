@@ -18,6 +18,14 @@
 #include "project-tree.h"
 #include "sd-preferences.h"
 
+struct _SDEditorTabData
+{
+  GtkNotebook *nb;
+  gint page;
+};
+
+typedef struct _SDEditorTabData SDEditorTabData;
+
 struct _SDWindowPrivate
 {
   GSettings *settings;
@@ -178,6 +186,15 @@ sd_window_guess_lang (const gchar *filename, const gchar *contents, gsize len)
   return NULL;
 }
 
+static gboolean
+sd_window_close_tab (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+  SDEditorTabData *data = user_data;
+  g_debug ("Closing editor tab %d", data->page);
+  gtk_notebook_remove_page (data->nb, data->page);
+  return TRUE;
+}
+
 SDWindow *
 sd_window_new (SDApplication *app)
 {
@@ -196,7 +213,9 @@ sd_window_open (SDWindow *window, GFile *file)
   basename = g_file_get_basename (file);
   priv->title = g_strdup_printf ("SimpleDevelop - %s", basename);
   g_free (basename);
-  gtk_header_bar_set_title (priv->header, priv->title);
+  basename = g_strdup_printf ("%s - Startup", priv->title);
+  gtk_header_bar_set_title (priv->header, basename);
+  g_free (basename);
 
   g_signal_connect (priv->preferences_item, "activate",
 		    G_CALLBACK (sd_preferences_activate), window);
@@ -212,14 +231,11 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
   GtkSourceView *view;
-  GtkWidget *label;
-  gchar *title;
+  GtkWidget *tab;
+  GtkWidget *event_box;
+  GtkWidget *close_button;
+  SDEditorTabData *user_data;
   gint page;
-
-  /* Update title of window */
-  title = g_strdup_printf ("%s - %s", priv->title, filename);
-  gtk_header_bar_set_title (priv->header, title);
-  g_free (title);
 
   /* Create new editor view */
   view = GTK_SOURCE_VIEW (gtk_source_view_new ());
@@ -241,8 +257,22 @@ sd_window_editor_open (SDWindow *self, const gchar *filename,
     }
 
   /* Add view to notebook */
-  label = gtk_label_new (filename);
+  tab = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
+  event_box = gtk_event_box_new ();
+  close_button = gtk_image_new_from_icon_name ("application-exit",
+					       GTK_ICON_SIZE_BUTTON);
+  gtk_container_add (GTK_CONTAINER (event_box), close_button);
+  gtk_container_add (GTK_CONTAINER (tab), event_box);
+  gtk_container_add (GTK_CONTAINER (tab), gtk_label_new (filename));
   page = gtk_notebook_append_page (GTK_NOTEBOOK (priv->editor_tabs),
-				   GTK_WIDGET (view), label);
+				   GTK_WIDGET (view), tab);
+
+  user_data = g_malloc (sizeof (SDEditorTabData));
+  user_data->nb = GTK_NOTEBOOK (priv->editor_tabs);
+  user_data->page = page;
+  g_signal_connect (event_box, "button-release-event",
+		    G_CALLBACK (sd_window_close_tab), user_data);
+
+  gtk_widget_show_all (tab);
   gtk_widget_show_all (priv->editor_tabs);
 }

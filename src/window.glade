@@ -96,22 +96,10 @@
                         <property name="scrollable">True</property>
                         <property name="enable_popup">True</property>
                         <child>
-                          <object class="GtkLabel" id="startup_text">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Double-click a file in the project tree view on the left to open it for editing</property>
-                            <property name="wrap">True</property>
-                          </object>
+                          <placeholder/>
                         </child>
                         <child type="tab">
-                          <object class="GtkLabel" id="startup_tab">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Startup</property>
-                          </object>
-                          <packing>
-                            <property name="tab_fill">False</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                         <child>
                           <placeholder/>
