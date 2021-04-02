@@ -23,6 +23,7 @@ enum
 {
   NAME_COLUMN = 0,
   FG_COLUMN,
+  FILE_COLUMN,
   N_COLUMNS
 };
 
@@ -34,7 +35,6 @@ G_DECLARE_FINAL_TYPE (SDWindow, sd_window, SD, WINDOW, GtkWindow)
 struct _SDWindow
 {
   GtkWindow parent;
-  GFile *project_dir;
 };
 
 SDWindow *sd_window_new (SDApplication *app);

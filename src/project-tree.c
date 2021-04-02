@@ -41,7 +41,7 @@ sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
   while (TRUE)
     {
       GFileInfo *info;
-      GFile *subdir;
+      GFile *subfile;
       const gchar *dispname;
       if (!g_file_enumerator_iterate (en, &info, NULL, NULL, &err))
 	goto finish;
@@ -50,14 +50,12 @@ sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
 
       dispname = g_file_info_get_display_name (info);
       gtk_tree_store_append (store, &child, parent);
+      subfile = g_file_get_child (file, g_file_info_get_name (info));
       gtk_tree_store_set (store, &child, NAME_COLUMN, dispname, FG_COLUMN,
-			  "Black", -1);
+			  "Black", FILE_COLUMN, subfile, -1);
 
       if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY)
-        {
-	  subdir = g_file_get_child (file, g_file_info_get_name (info));
-	  sd_project_tree_populate (store, &child, subdir);
-	}
+        sd_project_tree_populate (store, &child, subfile);
     }
 
  finish:
@@ -77,45 +75,19 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
 {
   GtkTreeModel *model = gtk_tree_view_get_model (view);
   SDWindow *window = SD_WINDOW (user_data);
-  GFile *file = window->project_dir;
   GError *err = NULL;
-  GQueue *queue;
-  GFile *subdir;
+  GFile *file;
+  GFileInfo *info;
   GtkTreeIter iter;
-  GtkTreeIter parent;
-  gchar *name;
-  gchar *save;
   gchar *contents;
+  gchar *name;
   gsize len;
 
   g_return_if_fail (gtk_tree_model_get_iter (model, &iter, path));
-  if (gtk_tree_model_iter_has_child (model, &iter))
+  gtk_tree_model_get (model, &iter, NAME_COLUMN, &name, FILE_COLUMN, &file, -1);
+  if (g_file_query_file_type (file, G_FILE_QUERY_INFO_NONE, NULL) !=
+      G_FILE_TYPE_REGULAR)
     return;
-
-  gtk_tree_model_get (model, &iter, NAME_COLUMN, &save, -1);
-  queue = g_queue_new ();
-  while (gtk_tree_model_iter_parent (model, &parent, &iter))
-    {
-      gtk_tree_model_get (model, &iter, NAME_COLUMN, &name, -1);
-      g_queue_push_head (queue, name);
-      iter = parent;
-    }
-  g_object_ref (window->project_dir);
-  while (name = g_queue_pop_head (queue), name != NULL)
-    {
-      subdir = g_file_get_child_for_display_name (file, name, &err);
-      g_free (name);
-      if (err != NULL)
-	{
-	  g_critical ("Failed to build file handler: %s", err->message);
-	  g_error_free (err);
-	  g_queue_free_full (queue, g_free);
-	  return;
-	}
-      g_object_unref (file);
-      file = subdir;
-    }
-  g_queue_free (queue);
 
   g_file_load_contents (file, NULL, &contents, &len, NULL, &err);
   if (err != NULL)
@@ -124,7 +96,8 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       g_error_free (err);
       return;
     }
-  sd_window_editor_open (window, save, contents, len);
-  g_free (save);
+
+  sd_window_editor_open (window, name, contents, len);
+  g_free (name);
   g_free (contents);
 }

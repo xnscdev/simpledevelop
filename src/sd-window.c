@@ -87,18 +87,19 @@ sd_window_build_project_tree (SDWindow *window, GFile *file)
     }
 
   renderer = gtk_cell_renderer_text_new ();
+  /* Causes warning because `file' is not an attribute of GtkCellRenderer
+     but seems to work anyway */
   col = gtk_tree_view_column_new_with_attributes ("Project Tree", renderer,
 						  "text", NAME_COLUMN,
 						  "foreground", FG_COLUMN,
+						  "file", FILE_COLUMN,
 						  NULL);
   gtk_tree_view_append_column (view, col);
 
-  window->project_dir = file;
-  g_object_ref (window->project_dir);
   gtk_tree_store_append (store, &parent, NULL);
   gtk_tree_store_set (store, &parent, NAME_COLUMN,
 		      g_file_info_get_display_name (info),
-		      FG_COLUMN, "Black", -1);
+		      FG_COLUMN, "Black", FILE_COLUMN, file, -1);
   g_object_unref (info);
   gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &parent);
   sd_project_tree_populate (store, &parent, file);
@@ -208,7 +209,6 @@ sd_window_open (SDWindow *window, GFile *file)
   gchar *basename;
   g_return_if_fail (sd_window_build_project_tree (window, file));
   priv = sd_window_get_instance_private (window);
-  window->project_dir = file;
 
   basename = g_file_get_basename (file);
   priv->title = g_strdup_printf ("SimpleDevelop - %s", basename);

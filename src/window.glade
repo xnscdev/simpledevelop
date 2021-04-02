@@ -20,6 +20,8 @@
       <column type="gchararray"/>
       <!-- column-name foreground -->
       <column type="gchararray"/>
+      <!-- column-name file -->
+      <column type="GFile"/>
     </columns>
   </object>
   <template class="SDWindow" parent="GtkWindow">
