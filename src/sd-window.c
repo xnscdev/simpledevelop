@@ -15,8 +15,8 @@
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <gtksourceview/gtksource.h>
-#include "project-tree.h"
 #include "sd-preferences.h"
+#include "sd-project-tree.h"
 
 struct _SDEditorTabData
 {
@@ -31,7 +31,7 @@ struct _SDWindowPrivate
   GSettings *settings;
   GtkHeaderBar *header;
   GtkMenuItem *preferences_item;
-  GtkWidget *project_tree;
+  GtkWidget *tree_window;
   GtkWidget *editor_tabs;
   gchar *title;
 };
@@ -58,7 +58,7 @@ sd_window_class_init (SDWindowClass *klass)
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, preferences_item);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
-						SDWindow, project_tree);
+						SDWindow, tree_window);
   gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass),
 						SDWindow, editor_tabs);
 }
@@ -67,46 +67,11 @@ static gboolean
 sd_window_build_project_tree (SDWindow *window, GFile *file)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (window);
-  GtkTreeView *view = GTK_TREE_VIEW (priv->project_tree);
-  GtkTreeStore *store = GTK_TREE_STORE (gtk_tree_view_get_model (view));
-  GtkCellRenderer *renderer;
-  GtkTreeViewColumn *col;
-  GtkTreePath *path;
-  GtkTreeIter parent;
-  GError *err = NULL;
-  GFileInfo *info =
-    g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
-		       G_FILE_QUERY_INFO_NONE, NULL, &err);
-  if (err != NULL)
-    {
-      gchar *path = g_file_get_path (file);
-      g_critical ("Failed to get info for %s: %s", path, err->message);
-      g_free (path);
-      g_error_free (err);
-      return FALSE;
-    }
-
-  renderer = gtk_cell_renderer_text_new ();
-  /* Causes warning because `file' is not an attribute of GtkCellRenderer
-     but seems to work anyway */
-  col = gtk_tree_view_column_new_with_attributes ("Project Tree", renderer,
-						  "text", NAME_COLUMN,
-						  "foreground", FG_COLUMN,
-						  "file", FILE_COLUMN,
-						  NULL);
-  gtk_tree_view_append_column (view, col);
-
-  gtk_tree_store_append (store, &parent, NULL);
-  gtk_tree_store_set (store, &parent, NAME_COLUMN,
-		      g_file_info_get_display_name (info),
-		      FG_COLUMN, "Black", FILE_COLUMN, file, -1);
-  g_object_unref (info);
-  gtk_tree_model_get_iter_first (GTK_TREE_MODEL (store), &parent);
-  sd_project_tree_populate (store, &parent, file);
-
-  path = gtk_tree_path_new_first ();
-  gtk_tree_view_expand_row (view, path, FALSE);
-  gtk_tree_path_free (path);
+  SDProjectTree *tree = sd_project_tree_new (window, file);
+  if (tree == NULL)
+    return FALSE;
+  gtk_container_add (GTK_CONTAINER (priv->tree_window), GTK_WIDGET (tree));
+  gtk_widget_show_all (priv->tree_window);
   return TRUE;
 }
 
@@ -248,8 +213,6 @@ sd_window_open (SDWindow *window, GFile *file)
 
   g_signal_connect (priv->preferences_item, "activate",
 		    G_CALLBACK (sd_preferences_activate), window);
-  g_signal_connect (priv->project_tree, "row-activated",
-		    G_CALLBACK (sd_project_tree_activated), window);
   g_signal_connect (priv->editor_tabs, "switch-page",
 		    G_CALLBACK (sd_window_editor_switch_page), window);
 }

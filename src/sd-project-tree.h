@@ -1,4 +1,4 @@
-/* project-tree.h -- This file is part of SimpleDevelop.
+/* sd-project-tree.h -- This file is part of SimpleDevelop.
    Copyright (C) 2021 XNSC
 
    SimpleDevelop is free software: you can redistribute it and/or modify
@@ -14,14 +14,32 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef _PROJECT_TREE_H
-#define _PROJECT_TREE_H
+#ifndef _SD_PROJECT_TREE_H
+#define _SD_PROJECT_TREE_H
 
-#include <gtk/gtk.h>
+#include "sd-window.h"
 
-void sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent,
-			       GFile *file);
-void sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
-				GtkTreeViewColumn *col, gpointer user_data);
+enum
+{
+  NAME_COLUMN = 0,
+  FG_COLUMN,
+  FILE_COLUMN,
+  N_COLUMNS
+};
+
+G_BEGIN_DECLS
+
+#define SD_TYPE_PROJECT_TREE sd_project_tree_get_type ()
+G_DECLARE_FINAL_TYPE (SDProjectTree, sd_project_tree, SD, PROJECT_TREE,
+		      GtkTreeView)
+
+struct _SDProjectTree
+{
+  GtkTreeView parent;
+};
+
+SDProjectTree *sd_project_tree_new (SDWindow *window, GFile *file);
+
+G_END_DECLS
 
 #endif

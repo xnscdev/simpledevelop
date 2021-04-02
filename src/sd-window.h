@@ -19,14 +19,6 @@
 
 #include "sd-application.h"
 
-enum
-{
-  NAME_COLUMN = 0,
-  FG_COLUMN,
-  FILE_COLUMN,
-  N_COLUMNS
-};
-
 G_BEGIN_DECLS
 
 #define SD_TYPE_WINDOW sd_window_get_type ()

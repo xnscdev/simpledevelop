@@ -8,14 +8,14 @@ BUILT_SOURCES = resources.c resources.h
 
 simpledevelop_SOURCES = 	\
 	main.c			\
-	project-tree.c		\
-	project-tree.h		\
 	resources.c		\
 	resources.h		\
 	sd-application.c	\
 	sd-application.h	\
 	sd-preferences.c	\
 	sd-preferences.h	\
+	sd-project-tree.c	\
+	sd-project-tree.h	\
 	sd-window.c		\
 	sd-window.h
 

@@ -1,4 +1,4 @@
-/* project-tree.c -- This file is part of SimpleDevelop.
+/* sd-project-tree.c -- This file is part of SimpleDevelop.
    Copyright (C) 2021 XNSC
 
    SimpleDevelop is free software: you can redistribute it and/or modify
@@ -14,10 +14,20 @@
    You should have received a copy of the GNU General Public License
    along with SimpleDevelop. If not, see <https://www.gnu.org/licenses/>. */
 
-#include "project-tree.h"
-#include "sd-window.h"
+#include "sd-project-tree.h"
 
-void
+struct _SDProjectTreePrivate
+{
+  GtkTreeStore *store;
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *col;
+};
+
+typedef struct _SDProjectTreePrivate SDProjectTreePrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (SDProjectTree, sd_project_tree, GTK_TYPE_TREE_VIEW)
+
+static void
 sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
 {
   GError *err = NULL;
@@ -70,7 +80,7 @@ sd_project_tree_populate (GtkTreeStore *store, GtkTreeIter *parent, GFile *file)
   g_object_unref (en);
 }
 
-void
+static void
 sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
 			   GtkTreeViewColumn *col, gpointer user_data)
 {
@@ -102,4 +112,67 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
   sd_window_editor_open (window, name, contents, len);
   g_free (name);
   g_free (contents);
+}
+
+static void
+sd_project_tree_init (SDProjectTree *self)
+{
+  SDProjectTreePrivate *priv = sd_project_tree_get_instance_private (self);
+  priv->store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING,
+				    G_TYPE_FILE);
+  priv->renderer = gtk_cell_renderer_text_new ();
+  /* Causes warning because `file' is not an attribute of GtkCellRenderer
+     but seems to work anyway */
+  priv->col =
+    gtk_tree_view_column_new_with_attributes ("Project Tree", priv->renderer,
+					      "text", NAME_COLUMN,
+					      "foreground", FG_COLUMN,
+					      "file", FILE_COLUMN, NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (self), priv->col);
+  gtk_tree_view_set_model (GTK_TREE_VIEW (self), GTK_TREE_MODEL (priv->store));
+}
+
+static void
+sd_project_tree_class_init (SDProjectTreeClass *klass)
+{
+}
+
+SDProjectTree *
+sd_project_tree_new (SDWindow *window, GFile *file)
+{
+  SDProjectTree *tree;
+  SDProjectTreePrivate *priv;
+  GtkTreeIter parent;
+  GtkTreePath *path;
+  GError *err = NULL;
+  GFileInfo *info =
+    g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
+		       G_FILE_QUERY_INFO_NONE, NULL, &err);
+  if (err != NULL)
+    {
+      gchar *str = g_file_get_path (file);
+      g_critical ("Failed to get info for %s: %s", str, err->message);
+      g_free (str);
+      g_error_free (err);
+      return NULL;
+    }
+
+  tree = g_object_new (SD_TYPE_PROJECT_TREE, NULL);
+  priv = sd_project_tree_get_instance_private (tree);
+
+  gtk_tree_store_append (priv->store, &parent, NULL);
+  gtk_tree_store_set (priv->store, &parent, NAME_COLUMN,
+		      g_file_info_get_display_name (info),
+		      FG_COLUMN, "Black", FILE_COLUMN, file, -1);
+  g_object_unref (info);
+  gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->store), &parent);
+  sd_project_tree_populate (priv->store, &parent, file);
+
+  path = gtk_tree_path_new_first ();
+  gtk_tree_view_expand_row (GTK_TREE_VIEW (tree), path, FALSE);
+  gtk_tree_path_free (path);
+
+  g_signal_connect (tree, "row-activated",
+		    G_CALLBACK (sd_project_tree_activated), window);
+  return tree;
 }
