@@ -18,6 +18,15 @@
 
 G_DEFINE_TYPE (SDApplication, sd_application, GTK_TYPE_APPLICATION)
 
+static void sd_application_quit_activated (GSimpleAction *action,
+					   GVariant *param, gpointer app);
+
+static const GActionEntry sd_application_entries[] = {
+  {"quit", sd_application_quit_activated, NULL, NULL, NULL}
+};
+
+static const gchar *sd_application_quit_accels[] = {"<Ctrl>Q", NULL};
+
 static void
 sd_application_open_window (gpointer data, gpointer user_data)
 {
@@ -46,6 +55,16 @@ sd_application_open (GApplication *app, GFile **files, gint nfiles,
 }
 
 static void
+sd_application_startup (GApplication *app)
+{
+  G_APPLICATION_CLASS (sd_application_parent_class)->startup (app);
+  g_action_map_add_action_entries (G_ACTION_MAP (app), sd_application_entries,
+				   G_N_ELEMENTS (sd_application_entries), app);
+  gtk_application_set_accels_for_action (GTK_APPLICATION (app), "app.quit",
+					 sd_application_quit_accels);
+}
+
+static void
 sd_application_init (SDApplication *self)
 {
 }
@@ -55,6 +74,14 @@ sd_application_class_init (SDApplicationClass *klass)
 {
   G_APPLICATION_CLASS (klass)->activate = sd_application_activate;
   G_APPLICATION_CLASS (klass)->open = sd_application_open;
+  G_APPLICATION_CLASS (klass)->startup = sd_application_startup;
+}
+
+static void
+sd_application_quit_activated (GSimpleAction *action, GVariant *param,
+			       gpointer app)
+{
+  g_application_quit (G_APPLICATION (app));
 }
 
 SDApplication *
