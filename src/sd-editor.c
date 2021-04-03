@@ -174,6 +174,21 @@ sd_editor_switch_page (GtkNotebook *nb, GtkWidget *page, guint pnum,
   sd_window_update_title (window, name);
 }
 
+static void
+sd_editor_view_changed (GtkTextBuffer *buffer, gpointer user_data)
+{
+  GSettings *settings = G_SETTINGS (user_data);
+  GtkTextIter start;
+  GtkTextIter end;
+  GtkTextTag *tag =
+    gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer), NULL, NULL);
+  g_settings_bind (settings, "font", tag, "font",
+		   G_SETTINGS_BIND_DEFAULT);
+  gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &start);
+  gtk_text_buffer_get_end_iter (GTK_TEXT_BUFFER (buffer), &end);
+  gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (buffer), tag, &start, &end);
+}
+
 SDEditor *
 sd_editor_new (SDWindow *window)
 {
@@ -195,9 +210,6 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file)
   GtkWidget *tab;
   GtkWidget *event_box;
   GtkWidget *close_button;
-  GtkTextTag *tag;
-  GtkTextIter start;
-  GtkTextIter end;
   SDEditorTabData *user_data;
   gchar *contents;
   gsize len;
@@ -239,13 +251,9 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file)
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
   g_free (contents);
-
-  tag = gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer), NULL, NULL);
-  g_settings_bind (priv->settings, "font", tag, "font",
-		   G_SETTINGS_BIND_DEFAULT);
-  gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &start);
-  gtk_text_buffer_get_end_iter (GTK_TEXT_BUFFER (buffer), &end);
-  gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (buffer), tag, &start, &end);
+  sd_editor_view_changed (GTK_TEXT_BUFFER (buffer), priv->settings);
+  g_signal_connect (buffer, "changed", G_CALLBACK (sd_editor_view_changed),
+		    priv->settings);
 
   /* Apply syntax highlighting to buffer */
   lang = sd_editor_guess_lang (filename, contents, len);
