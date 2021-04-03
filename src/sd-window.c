@@ -33,9 +33,25 @@ typedef struct _SDWindowPrivate SDWindowPrivate;
 G_DEFINE_TYPE_WITH_PRIVATE (SDWindow, sd_window, GTK_TYPE_WINDOW)
 
 static void
+sd_window_save_activated (GSimpleAction *action, GVariant *param,
+			  gpointer user_data)
+{
+  g_message ("Saving current file");
+}
+
+static void
 sd_window_init (SDWindow *self)
 {
+  GtkAccelGroup *accels;
+  GClosure *save_callback;
   gtk_widget_init_template (GTK_WIDGET (self));
+
+  accels = gtk_accel_group_new ();
+  save_callback =
+    g_cclosure_new (G_CALLBACK (sd_window_save_activated), self, NULL);
+  gtk_accel_group_connect (accels, 's', GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE,
+			   save_callback);
+  gtk_window_add_accel_group (GTK_WINDOW (self), accels);
 }
 
 static void
