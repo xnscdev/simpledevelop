@@ -87,11 +87,10 @@ sd_window_open (SDWindow *window, GFile *file)
 }
 
 void
-sd_window_editor_open (SDWindow *self, const gchar *filename,
-		       const gchar *contents, gsize len)
+sd_window_editor_open (SDWindow *self, const gchar *filename, GFile *file)
 {
   SDWindowPrivate *priv = sd_window_get_instance_private (self);
-  sd_editor_open_tab (priv->editor, filename, contents, len);
+  sd_editor_open_tab (priv->editor, filename, file);
 }
 
 void

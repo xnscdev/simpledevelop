@@ -86,12 +86,9 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
 {
   GtkTreeModel *model = gtk_tree_view_get_model (view);
   SDWindow *window = SD_WINDOW (user_data);
-  GError *err = NULL;
   GFile *file;
   GtkTreeIter iter;
-  gchar *contents;
   gchar *name;
-  gsize len;
 
   g_return_if_fail (gtk_tree_model_get_iter (model, &iter, path));
   gtk_tree_model_get (model, &iter, NAME_COLUMN, &name, FILE_COLUMN, &file, -1);
@@ -99,19 +96,8 @@ sd_project_tree_activated (GtkTreeView *view, GtkTreePath *path,
       G_FILE_TYPE_REGULAR)
     return;
 
-  g_file_load_contents (file, NULL, &contents, &len, NULL, &err);
-  if (err != NULL)
-    {
-      g_critical ("Failed to read file contents: %s", err->message);
-      g_error_free (err);
-      return;
-    }
-
-  /* Don't open binary files */
-  g_return_if_fail (g_utf8_validate (contents, len, NULL));
-  sd_window_editor_open (window, name, contents, len);
+  sd_window_editor_open (window, name, file);
   g_free (name);
-  g_free (contents);
 }
 
 static void

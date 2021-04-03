@@ -20,6 +20,8 @@
 struct _SDEditorTabData
 {
   GtkNotebook *nb;
+  GtkWidget *widget;
+  GFile *file;
   gint page;
 };
 
@@ -28,6 +30,7 @@ typedef struct _SDEditorTabData SDEditorTabData;
 struct _SDEditorPrivate
 {
   GSettings *settings;
+  GPtrArray *files;
 };
 
 typedef struct _SDEditorPrivate SDEditorPrivate;
@@ -39,6 +42,9 @@ sd_editor_init (SDEditor *self)
 {
   SDEditorPrivate *priv = sd_editor_get_instance_private (self);
   priv->settings = g_settings_new (SD_SETTINGS_NAME);
+  priv->files = g_ptr_array_new ();
+  gtk_notebook_set_scrollable (GTK_NOTEBOOK (self), TRUE);
+  gtk_notebook_popup_enable (GTK_NOTEBOOK (self));
 }
 
 static void
@@ -127,9 +133,20 @@ static gboolean
 sd_editor_close_tab (GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
   SDEditorTabData *data = user_data;
+  SDEditorPrivate *priv = sd_editor_get_instance_private (SD_EDITOR (data->nb));
+  gint i;
+
   g_debug ("Closing editor tab %d", data->page);
-  gtk_notebook_remove_page (data->nb, data->page);
-  return TRUE;
+  g_ptr_array_remove_fast (priv->files, user_data);
+  for (i = 0; i < gtk_notebook_get_n_pages (data->nb); i++)
+    {
+      if (gtk_notebook_get_nth_page (data->nb, i) == data->widget)
+	{
+	  gtk_notebook_remove_page (data->nb, i);
+	  return TRUE;
+	}
+    }
+  g_return_val_if_reached (FALSE);
 }
 
 static void
@@ -167,10 +184,10 @@ sd_editor_new (SDWindow *window)
 }
 
 void
-sd_editor_open_tab (SDEditor *self, const gchar *filename,
-		    const gchar *contents, gsize len)
+sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file)
 {
   SDEditorPrivate *priv = sd_editor_get_instance_private (self);
+  GError *err = NULL;
   GtkSourceLanguage *lang;
   GtkSourceBuffer *buffer;
   GtkSourceView *view;
@@ -182,7 +199,37 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename,
   GtkTextIter start;
   GtkTextIter end;
   SDEditorTabData *user_data;
+  gchar *contents;
+  gsize len;
   gint page;
+  gint i;
+
+  /* If the file is already open, switch to that tab */
+  for (i = 0; i < priv->files->len; i++)
+    {
+      SDEditorTabData *data = g_ptr_array_index (priv->files, i);
+      if (data->file == file)
+	{
+	  for (i = 0; i < gtk_notebook_get_n_pages (GTK_NOTEBOOK (self)); i++)
+	    {
+	      if (gtk_notebook_get_nth_page (GTK_NOTEBOOK (self), i) ==
+		  data->widget)
+		{
+		  gtk_notebook_set_current_page (GTK_NOTEBOOK (self), i);
+		  return;
+		}
+	    }
+	  g_return_if_reached ();
+	}
+    }
+
+  g_file_load_contents (file, NULL, &contents, &len, NULL, &err);
+  if (err != NULL)
+    {
+      g_critical ("Failed to open tab `%s': %s", filename, err->message);
+      g_error_free (err);
+      return;
+    }
 
   /* Create new editor view */
   view = GTK_SOURCE_VIEW (gtk_source_view_new ());
@@ -191,6 +238,7 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename,
 
   buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)));
   gtk_text_buffer_set_text (GTK_TEXT_BUFFER (buffer), contents, len);
+  g_free (contents);
 
   tag = gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer), NULL, NULL);
   g_settings_bind (priv->settings, "font", tag, "font",
@@ -223,10 +271,14 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename,
 
   user_data = g_malloc (sizeof (SDEditorTabData));
   user_data->nb = GTK_NOTEBOOK (self);
+  user_data->widget = window;
+  user_data->file = file;
   user_data->page = page;
   g_signal_connect (event_box, "button-release-event",
 		    G_CALLBACK (sd_editor_close_tab), user_data);
 
   gtk_widget_show_all (tab);
   gtk_widget_show_all (GTK_WIDGET (self));
+
+  g_ptr_array_add (priv->files, user_data);
 }

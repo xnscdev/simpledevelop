@@ -30,8 +30,7 @@ struct _SDEditor
 };
 
 SDEditor *sd_editor_new (SDWindow *window);
-void sd_editor_open_tab (SDEditor *self, const gchar *filename,
-			 const gchar *contents, gsize len);
+void sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file);
 
 G_END_DECLS
 
