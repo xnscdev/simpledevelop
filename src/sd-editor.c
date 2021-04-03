@@ -282,3 +282,54 @@ sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file)
 
   g_ptr_array_add (priv->files, user_data);
 }
+
+static void
+sd_editor_save_text (GFile *file, GtkTextBuffer *buffer)
+{
+  GtkTextIter start;
+  GtkTextIter end;
+  gchar *text;
+  GError *err = NULL;
+
+  gtk_text_buffer_get_start_iter (buffer, &start);
+  gtk_text_buffer_get_end_iter (buffer, &end);
+  text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
+  g_file_replace_contents (file, text, strlen (text), NULL, FALSE,
+			   G_FILE_CREATE_NONE, NULL, NULL, &err);
+  g_free (text);
+  if (err != NULL)
+    {
+      gchar *path = g_file_get_path (file);
+      g_critical ("Failed to write to %s: %s", path, err->message);
+      g_free (path);
+      g_error_free (err);
+    }
+}
+
+void
+sd_editor_save_file (SDEditor *self)
+{
+  SDEditorPrivate *priv = sd_editor_get_instance_private (self);
+  gint page = gtk_notebook_get_current_page (GTK_NOTEBOOK (self));
+  GtkWidget *widget;
+  gint i;
+
+  if (page == -1)
+    return; /* No page currently open */
+
+  g_debug ("Saving contents of tab %d to disk", page);
+  widget = gtk_notebook_get_nth_page (GTK_NOTEBOOK (self), page);
+  for (i = 0; i < priv->files->len; i++)
+    {
+      SDEditorTabData *data = g_ptr_array_index (priv->files, i);
+      if (data->widget == widget)
+	{
+	  GList *list = gtk_container_get_children (GTK_CONTAINER (widget));
+	  GtkTextBuffer *buffer =
+	    gtk_text_view_get_buffer (GTK_TEXT_VIEW (list->data));
+	  sd_editor_save_text (data->file, buffer);
+	  return;
+	}
+    }
+  g_return_if_reached ();
+}

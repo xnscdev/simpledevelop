@@ -31,6 +31,7 @@ struct _SDEditor
 
 SDEditor *sd_editor_new (SDWindow *window);
 void sd_editor_open_tab (SDEditor *self, const gchar *filename, GFile *file);
+void sd_editor_save_file (SDEditor *self);
 
 G_END_DECLS
 
